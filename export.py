@@ -16,16 +16,15 @@ def get_config() -> dict[str, Any]:
 
 
 LOG = logging.getLogger(__name__)
-ENTITY_TYPE_NAME = {
-    types.User: "user",
-    types.Channel: "channel",
-    types.Chat: "chat",
-}
 
 
 def get_entity_type_name(ent: types.TLObject) -> str:
-    if type(ent) in ENTITY_TYPE_NAME:
-        return ENTITY_TYPE_NAME[type(ent)]
+    if isinstance(ent, types.User):
+        return "user"
+    if isinstance(ent, types.Channel | types.Chat):
+        if ent.broadcast:
+            return "channel"
+        return "group"
     raise TypeError("Unknown entity type: {}".format(type(ent)))
 
 
@@ -88,7 +87,7 @@ def main() -> None:
         for dlg_filter in dlg_filters:
             if isinstance(dlg_filter, types.DialogFilterDefault):
                 continue
-            LOG.info("Processing folder {}".format(dlg_filter.title))
+            LOG.info("Processing folder %s", dlg_filter.title)
             result.append(export_dialog_filter(client, dlg_filter))
     print(render_result(result))
 
