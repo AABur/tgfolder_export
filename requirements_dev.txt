@@ -1,0 +1,15 @@
+# Dev
+pip
+pyyaml
+telethon
+
+# types
+types-pyyaml
+
+# Code Quality
+ruff
+flake8
+mypy
+pep8-naming
+pylint
+black
