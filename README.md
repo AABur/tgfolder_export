@@ -16,6 +16,7 @@ tg:
 
 ```
 git clone https://github.com/lorien/tgfolder_export
+cd tgfolder_export
 make init
 source .env/bin/activate
 # create config file, see above
