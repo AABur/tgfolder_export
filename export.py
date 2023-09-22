@@ -78,7 +78,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     config = get_config()
     client = TelegramClient(
-        "var/user_{}.session".format(config["tg"]["app_id"]),
+        "var/tg.session",
         config["tg"]["app_id"],
         config["tg"]["app_hash"],
     )
@@ -88,6 +88,7 @@ def main() -> None:
         for dlg_filter in dlg_filters:
             if isinstance(dlg_filter, types.DialogFilterDefault):
                 continue
+            LOG.info("Processing folder {}".format(dlg_filter.title))
             result.append(export_dialog_filter(client, dlg_filter))
     print(render_result(result))
 
