@@ -1,4 +1,6 @@
-# A program to export your Telegram chat folders
+# A program to export list of channels for each of your Telegram folder
+
+The program exports only list of channels, it does not export messages.
 
 What is chat folders: https://telegram.org/blog/folders
 
