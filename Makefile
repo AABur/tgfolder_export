@@ -6,13 +6,11 @@ FILES_CHECK_ALL = $(FILES_CHECK_MYPY)
 init: venv deps dirs
 
 venv:
-	virtualenv -p python3 .env
+	uv venv .venv
 
 deps:
-	curl -sS https://bootstrap.pypa.io/get-pip.py | .env/bin/python3 # a fix for manually built python
-	.env/bin/python -m pip install -U setuptools # a fix for manually built python
-	.env/bin/pip install -r requirements_dev.txt
-	
+	uv pip install --python .venv -r requirements_dev.txt
+
 
 dirs:
 	if [ ! -e var/run ]; then mkdir -p var/run; fi

@@ -17,11 +17,12 @@ tg:
 
 ## Installation and usage
 
-```
-git clone https://github.com/lorien/tgfolder_export
+```bash
+git clone https://github.com/AABur/tgfolder_export
 cd tgfolder_export
+# Install uv if not already installed: https://docs.astral.sh/uv/
 make init
-source .env/bin/activate
+source .venv/bin/activate
 # create config file, see above
 ./export.py > export.json
 ```
