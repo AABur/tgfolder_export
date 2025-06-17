@@ -1,95 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "tgfolder_export"
 version = "0.0.1"
+description = "Export Telegram folder contents as JSON"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "AABur"}]
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml",
+    "telethon",
+]
 
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "ruff", 
+    "types-pyyaml",
+]
 
-[tool.setuptools]
-packages = []
+[project.scripts]
+tgfolder_export = "export:main"
 
-[tool.setuptools.package-data]
-"*" = ["py.typed"]
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+extend-exclude = ["var"]
 
-[tool.isort]
-profile = "black"
-line_length = 88
-# skip_gitignore = true # throws errors in stderr when ".git" dir does not exist
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings  
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"export.py" = ["T201"]  # Allow print statements in main script
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
 
 [[tool.mypy.overrides]]
 module = "telethon.*"
 ignore_missing_imports = true
-
-[tool.pylint.main]
-jobs=4
-extension-pkg-whitelist="lxml"
-disable="missing-docstring,broad-except,too-few-public-methods,consider-using-f-string,fixme,no-member"
-variable-rgx="[a-z_][a-z0-9_]{1,30}$"
-attr-rgx="[a-z_][a-z0-9_]{1,30}$"
-argument-rgx="[a-z_][a-z0-9_]{1,30}$"
-max-line-length=88
-max-args=9
-load-plugins=[
-    "pylint.extensions.check_elif",
-    "pylint.extensions.comparetozero",
-    "pylint.extensions.comparison_placement",
-    "pylint.extensions.consider_ternary_expression",
-    "pylint.extensions.docstyle",
-    "pylint.extensions.emptystring",
-    "pylint.extensions.for_any_all",
-    "pylint.extensions.overlapping_exceptions",
-    "pylint.extensions.redefined_loop_name",
-    "pylint.extensions.redefined_variable_type",
-    "pylint.extensions.set_membership",
-    "pylint.extensions.typing",
-]
-
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-
-[tool.ruff]
-select = ["ALL"]
-ignore = [
-    "A003", # Class attribute `type` is shadowing a python builtin
-    "ANN101", # Missing type annotation for `self` in method
-    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
-    "BLE001", # Do not catch blind exception: `Exception`
-    "COM812", # Trailing comma missing
-    "D100", # Missing docstring in public module
-    "D101", # Missing docstring in public class
-    "D102", # Missing docstring in public method1
-    "D103", # Missing docstring in public function
-    "D104", # Missing docstring in public package
-    "D105", # Missing docstring in magic method,
-    "D107", # Missing docstring in `__init__`
-    "D203", # 1 blank line required before class docstring
-    "D213", # Multi-line docstring summary should start at the second line
-    "EM101", # Check for raw usage of a string literal in Exception raising
-    "EM102", # Check for raw usage of an f-string literal in Exception raising
-    "EM103", # Check for raw usage of .format on a string literal in Exception raising
-    "F401", # Imported but unused
-    "FBT", # Boolean arg/value in function definition
-    "PTH", # A plugin finding use of functions that can be replaced by pathlib module
-    "S101", # Use of `assert` detected
-    "T201", # print found	
-    "T203", # pprint found
-    "TCH", # Move import into a type-checking block
-    "TRY003", # Avoid specifying long messages outside the exception class
-    "UP032", # Use f-string instead of format call
-    "ERA001", # Found commented-out code
-    "RUF001", # String contains ambiguous unicode character
-    "ANN102", # Missing type annotation for `cls` in classmethod
-    "TD002", # Missing author in TODO
-    "TD003", # Missing issue link on the line following this TODO
-    "FIX002", # Line contains TODO
-    "RUF003", # Comment contains ambiguous
-    "RUF012", # Mutable class attributes should be annotated
-    "TRY400", #  Use `logging.exception` instead of `logging.error`
-    "PERF401", # Use a list comprehension to create a transformed list
-    "RUF100", # [*] Unused `noqa` directive
-]
-pylint.max-args=9
-target-version = "py311"
-extend-exclude = ["var"]

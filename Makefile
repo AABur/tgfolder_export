@@ -1,16 +1,11 @@
-.PHONY: init venv deps dirs clean mypy pylint ruff check build
+.PHONY: init dirs clean mypy ruff check build
 
-FILES_CHECK_MYPY = export.py
-FILES_CHECK_ALL = $(FILES_CHECK_MYPY)
+FILES_CHECK = export.py
 
-init: venv deps dirs
-
-venv:
-	uv venv .venv
+init: dirs deps
 
 deps:
-	uv pip install --python .venv -r requirements_dev.txt
-
+	uv sync --dev
 
 dirs:
 	if [ ! -e var/run ]; then mkdir -p var/run; fi
@@ -20,19 +15,17 @@ clean:
 	find -name '*.pyc' -delete
 	find -name '*.swp' -delete
 	find -name '__pycache__' -delete
-
-mypy:
-	mypy --strict $(FILES_CHECK_MYPY)
-
-pylint:
-	pylint -j0 $(FILES_CHECK_ALL)
-
-ruff:
-	ruff $(FILES_CHECK_ALL)
-
-check: ruff mypy pylint
-
-build:
 	rm -rf *.egg-info
 	rm -rf dist/*
-	python -m build --sdist
+
+mypy:
+	mypy $(FILES_CHECK)
+
+ruff:
+	ruff check --fxi $(FILES_CHECK)
+	ruff format --check $(FILES_CHECK)
+
+check: ruff mypy
+
+build:
+	uv build
