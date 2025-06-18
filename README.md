@@ -102,7 +102,7 @@ make mypy          # Type checking
 
 ```bash
 make init      # Initialize development environment
-make check     # Run all linting and type checks
+make check     # Run all linting, type checking, and tests
 make build     # Build the package
 make clean     # Clean up generated files
 ```
