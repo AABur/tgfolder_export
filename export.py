@@ -27,7 +27,7 @@ def get_entity_type_name(ent: types.TLObject) -> str:
         return "group"
     if isinstance(ent, types.Chat):
         return "group"
-    raise TypeError("Unknown entity type: {}".format(type(ent)))
+    raise TypeError(f"Unknown entity type: {type(ent)}")
 
 
 def get_entity_name(ent: types.TLObject) -> None | str:
@@ -37,7 +37,7 @@ def get_entity_name(ent: types.TLObject) -> None | str:
         return cast(str, ent.title)
     if isinstance(ent, types.User):
         return ((ent.first_name or "") + " " + (ent.last_name or "")).strip()
-    raise TypeError("Unknown entity type: {}".format(type(ent)))
+    raise TypeError(f"Unknown entity type: {type(ent)}")
 
 
 def export_entity(ent: types.TLObject) -> dict[str, Any]:
@@ -46,13 +46,13 @@ def export_entity(ent: types.TLObject) -> dict[str, Any]:
         "id": ent.id,
         "name": get_entity_name(ent),
     }
-    
+
     # Only User and Channel entities have username attribute
     if hasattr(ent, "username"):
         result["username"] = ent.username
     else:
         result["username"] = None
-    
+
     return result
 
 

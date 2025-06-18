@@ -1,4 +1,4 @@
-.PHONY: init dirs clean mypy ruff check build
+.PHONY: init dirs clean mypy ruff test test-cov check build
 
 FILES_CHECK = export.py
 
@@ -17,15 +17,23 @@ clean:
 	find -name '__pycache__' -delete
 	rm -rf *.egg-info
 	rm -rf dist/*
+	rm -rf .coverage
+	rm -rf htmlcov/
 
 mypy:
-	mypy $(FILES_CHECK)
+	uv run mypy $(FILES_CHECK)
 
 ruff:
-	ruff check --fxi $(FILES_CHECK)
-	ruff format --check $(FILES_CHECK)
+	uv run ruff check --fix $(FILES_CHECK)
+	uv run ruff format --check $(FILES_CHECK)
 
-check: ruff mypy
+test:
+	uv run pytest
+
+test-cov:
+	uv run pytest --cov=export --cov-report=html --cov-report=term
+
+check: ruff mypy test
 
 build:
 	uv build

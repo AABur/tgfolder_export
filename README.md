@@ -83,15 +83,19 @@ The script generates a JSON structure like this:
 
 ## 🛠️ Development
 
-### Code Quality
+### Testing & Code Quality
 
 ```bash
+# Run tests
+make test          # Run pytest tests
+make test-cov      # Run tests with coverage report
+
 # Run all checks
-make check
+make check         # Linting, type checking, and tests
 
 # Individual tools
-make ruff      # Linting and formatting
-make mypy      # Type checking
+make ruff          # Linting and formatting
+make mypy          # Type checking
 ```
 
 ### Available Commands

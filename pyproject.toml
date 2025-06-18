@@ -20,10 +20,15 @@ dev = [
     "mypy",
     "ruff", 
     "types-pyyaml",
+    "pytest",
+    "pytest-cov",
 ]
 
 [project.scripts]
 tgfolder_export = "export:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
 
 [tool.ruff]
 target-version = "py311"
