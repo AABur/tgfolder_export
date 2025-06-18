@@ -22,6 +22,7 @@ dev = [
     "types-pyyaml",
     "pytest",
     "pytest-cov",
+    "pytest-mock",
 ]
 
 [project.scripts]
