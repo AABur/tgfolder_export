@@ -16,6 +16,7 @@ from export import (
     get_entity_type_name,
     main,
     render_result,
+    render_text_result,
 )
 
 
@@ -315,7 +316,7 @@ def test_render_result_unicode(mocker: MockerFixture) -> None:
 
 
 def test_main(mocker: MockerFixture) -> None:
-    """Test main function execution."""
+    """Test main function execution with no arguments (backward compatibility)."""
     # Mock config
     config_data: dict[str, Any] = {"tg": {"app_id": 12345, "app_hash": "test_hash"}}
 
@@ -329,6 +330,9 @@ def test_main(mocker: MockerFixture) -> None:
     # Mock responses
     mock_filters_response = mocker.Mock()
     mock_filters_response.filters = [mock_filter]
+
+    # Mock sys.argv to have no additional arguments (backward compatibility)
+    mocker.patch("sys.argv", ["export.py"])
 
     mocker.patch("export.get_config", return_value=config_data)
     mock_client_class = mocker.patch("export.TelegramClient")
@@ -356,3 +360,132 @@ def test_main(mocker: MockerFixture) -> None:
     assert len(parsed) == 1
     assert parsed[0]["id"] == 1
     assert parsed[0]["title"] == "Work"
+
+
+def test_render_text_result(mocker: MockerFixture) -> None:
+    """Test text rendering of results."""
+    test_data = [
+        {
+            "id": 1,
+            "title": "Work",
+            "peers": [
+                {
+                    "type": "channel",
+                    "id": 12345,
+                    "name": "Test Channel",
+                    "username": "testchannel",
+                },
+                {
+                    "type": "group",
+                    "id": 67890,
+                    "name": "Test Group",
+                    "username": None,
+                },
+            ],
+        }
+    ]
+
+    result = render_text_result(test_data)
+
+    # Should contain expected text elements
+    assert "TELEGRAM FOLDERS EXPORT" in result
+    assert "Folder: Work" in result
+    assert "Channels (1):" in result
+    assert "Groups (1):" in result
+    assert "Test Channel (@testchannel)" in result
+    assert "Test Group [ID: 67890]" in result
+    assert "Total: 1 folders, 1 channels, 1 groups, 0 users" in result
+    assert "Generated:" in result
+
+
+def test_main_json_output(mocker: MockerFixture) -> None:
+    """Test main function with JSON output."""
+    # Mock config
+    config_data: dict[str, Any] = {"tg": {"app_id": 12345, "app_hash": "test_hash"}}
+
+    # Mock dialog filter
+    mock_filter = mocker.Mock(spec=types.DialogFilter)
+    mock_filter.id = 1
+    mock_filter.title = mocker.Mock()
+    mock_filter.title.text = "Work"
+    mock_filter.include_peers = []
+
+    # Mock responses
+    mock_filters_response = mocker.Mock()
+    mock_filters_response.filters = [mock_filter]
+
+    # Mock file operations
+    mock_open = mocker.mock_open()
+    mocker.patch("builtins.open", mock_open)
+    mocker.patch("sys.argv", ["export.py", "-j", "test.json"])
+
+    mocker.patch("export.get_config", return_value=config_data)
+    mock_client_class = mocker.patch("export.TelegramClient")
+    mocker.patch("export.logging.basicConfig")
+
+    mock_client = mocker.Mock()
+    mock_client_class.return_value = mock_client
+    mock_client.__enter__ = mocker.Mock(return_value=mock_client)
+    mock_client.__exit__ = mocker.Mock(return_value=None)
+    mock_client.return_value = mock_filters_response
+
+    main()
+
+    # Verify TelegramClient was created with correct params
+    mock_client_class.assert_called_once_with("var/tg.session", 12345, "test_hash")
+
+    # Verify file was opened for writing
+    mock_open.assert_called_once_with("test.json", "w", encoding="utf-8")
+
+    # Verify JSON content was written
+    written_content = "".join(call.args[0] for call in mock_open().write.call_args_list)
+    parsed = json.loads(written_content)
+    assert isinstance(parsed, list)
+    assert len(parsed) == 1
+    assert parsed[0]["id"] == 1
+    assert parsed[0]["title"] == "Work"
+
+
+def test_main_text_output(mocker: MockerFixture) -> None:
+    """Test main function with text output."""
+    # Mock config
+    config_data: dict[str, Any] = {"tg": {"app_id": 12345, "app_hash": "test_hash"}}
+
+    # Mock dialog filter
+    mock_filter = mocker.Mock(spec=types.DialogFilter)
+    mock_filter.id = 1
+    mock_filter.title = mocker.Mock()
+    mock_filter.title.text = "Personal"
+    mock_filter.include_peers = []
+
+    # Mock responses
+    mock_filters_response = mocker.Mock()
+    mock_filters_response.filters = [mock_filter]
+
+    # Mock file operations
+    mock_open = mocker.mock_open()
+    mocker.patch("builtins.open", mock_open)
+    mocker.patch("sys.argv", ["export.py", "-t", "test.txt"])
+
+    mocker.patch("export.get_config", return_value=config_data)
+    mock_client_class = mocker.patch("export.TelegramClient")
+    mocker.patch("export.logging.basicConfig")
+
+    mock_client = mocker.Mock()
+    mock_client_class.return_value = mock_client
+    mock_client.__enter__ = mocker.Mock(return_value=mock_client)
+    mock_client.__exit__ = mocker.Mock(return_value=None)
+    mock_client.return_value = mock_filters_response
+
+    main()
+
+    # Verify TelegramClient was created with correct params
+    mock_client_class.assert_called_once_with("var/tg.session", 12345, "test_hash")
+
+    # Verify file was opened for writing
+    mock_open.assert_called_once_with("test.txt", "w", encoding="utf-8")
+
+    # Verify text content was written
+    written_content = "".join(call.args[0] for call in mock_open().write.call_args_list)
+    assert "TELEGRAM FOLDERS EXPORT" in written_content
+    assert "Folder: Personal" in written_content

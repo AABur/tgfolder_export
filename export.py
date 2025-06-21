@@ -3,6 +3,7 @@ import argparse
 import json
 import logging
 import os
+from datetime import datetime
 from importlib.metadata import version
 from typing import Any, cast
 
@@ -88,7 +89,71 @@ def export_dialog_filter(
 
 
 def render_result(result: list[dict[str, Any]]) -> str:
+    """Render results as JSON."""
     return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+def render_text_result(result: list[dict[str, Any]]) -> str:
+    """Render results as formatted text."""
+    lines = []
+    lines.append("TELEGRAM FOLDERS EXPORT")
+    lines.append("=======================")
+    lines.append("")
+
+    total_folders = len(result)
+    total_channels = 0
+    total_groups = 0
+    total_users = 0
+
+    for folder in result:
+        lines.append(f"Folder: {folder['title']}")
+        lines.append("-" * (8 + len(folder["title"])))
+
+        # Group peers by type
+        channels = [p for p in folder["peers"] if p["type"] == "channel"]
+        groups = [p for p in folder["peers"] if p["type"] == "group"]
+        users = [p for p in folder["peers"] if p["type"] == "user"]
+
+        total_channels += len(channels)
+        total_groups += len(groups)
+        total_users += len(users)
+
+        if channels:
+            lines.append(f"Channels ({len(channels)}):")
+            for peer in channels:
+                username_part = f" (@{peer['username']})" if peer["username"] else ""
+                name = peer["name"] or "Unnamed Channel"
+                lines.append(f"  • {name}{username_part} [ID: {peer['id']}]")
+            lines.append("")
+
+        if groups:
+            lines.append(f"Groups ({len(groups)}):")
+            for peer in groups:
+                username_part = f" (@{peer['username']})" if peer["username"] else ""
+                name = peer["name"] or "Unnamed Group"
+                lines.append(f"  • {name}{username_part} [ID: {peer['id']}]")
+            lines.append("")
+
+        if users:
+            lines.append(f"Users ({len(users)}):")
+            for peer in users:
+                username_part = f" (@{peer['username']})" if peer["username"] else ""
+                name = peer["name"] or "Unnamed User"
+                lines.append(f"  • {name}{username_part} [ID: {peer['id']}]")
+            lines.append("")
+
+        if not (channels or groups or users):
+            lines.append("No items")
+            lines.append("")
+
+    # Summary
+    lines.append("=======================")
+    lines.append(
+        f"Total: {total_folders} folders, {total_channels} channels, {total_groups} groups, {total_users} users"
+    )
+    lines.append(f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+
+    return "\n".join(lines)
 
 
 def main() -> None:
@@ -98,12 +163,32 @@ def main() -> None:
         __version__ = "unknown"
 
     parser = argparse.ArgumentParser(
-        description="Export Telegram folder contents as JSON"
+        description="Export Telegram folder contents to file"
     )
     parser.add_argument(
         "--version", action="version", version=f"tgfolder_export {__version__}"
     )
-    parser.parse_args()
+
+    # Output format options
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument(
+        "-j",
+        "--json",
+        nargs="?",
+        const="tgf-list.json",
+        metavar="FILE",
+        help="Export to JSON format (default: tgf-list.json)",
+    )
+    output_group.add_argument(
+        "-t",
+        "--text",
+        nargs="?",
+        const="tgf-list.txt",
+        metavar="FILE",
+        help="Export to text format (default: tgf-list.txt)",
+    )
+
+    args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
     config = get_config()
@@ -120,7 +205,27 @@ def main() -> None:
                 continue
             LOG.info("Processing folder %s", dlg_filter.title.text)
             result.append(export_dialog_filter(client, dlg_filter))
-    print(render_result(result))
+
+    # Determine output file and format
+    if args.json:
+        output_file = args.json
+        content = render_result(result)
+        LOG.info("Writing JSON output to %s", output_file)
+        # Write to file
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(content)
+        LOG.info("Export completed successfully")
+    elif args.text:
+        output_file = args.text
+        content = render_text_result(result)
+        LOG.info("Writing text output to %s", output_file)
+        # Write to file
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(content)
+        LOG.info("Export completed successfully")
+    else:
+        # Fallback for backward compatibility (no arguments provided)
+        print(render_result(result))
 
 
 if __name__ == "__main__":

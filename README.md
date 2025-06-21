@@ -46,29 +46,36 @@ app_api_hash=your_api_hash_here
 ### Usage
 
 ```bash
-# Export all folders to JSON
-./export.py > export.json
+# Export to JSON format (default filename: tgf-list.json)
+./export.py -j
 
-# Or with custom output
-./export.py > my_telegram_folders.json
+# Export to JSON with custom filename
+./export.py -j my_folders.json
+
+# Export to text format (default filename: tgf-list.txt)
+./export.py -t
+
+# Export to text with custom filename
+./export.py -t my_folders.txt
 ```
 
-## 📊 Output Format
+## 📊 Output Formats
 
-The script generates a JSON structure like this:
+### JSON Format
+When using `-j` or `--json`, the script generates a JSON structure like this:
 
 ```json
-{
-  "Work": {
-    "channels": [
+[
+  {
+    "id": 1,
+    "title": "Work",
+    "peers": [
       {
         "type": "channel",
         "id": 1234567890,
         "username": "example_channel",
         "name": "Example Channel"
-      }
-    ],
-    "groups": [
+      },
       {
         "type": "group",
         "id": 9876543210,
@@ -77,7 +84,27 @@ The script generates a JSON structure like this:
       }
     ]
   }
-}
+]
+```
+
+### Text Format
+When using `-t` or `--text`, the script generates a human-readable text file:
+
+```
+TELEGRAM FOLDERS EXPORT
+=======================
+
+Folder: Work
+------------
+Channels (1):
+  • Example Channel (@example_channel) [ID: 1234567890]
+
+Groups (1):
+  • My Work Group [ID: 9876543210]
+
+=======================
+Total: 1 folders, 1 channels, 1 groups, 0 users
+Generated: 2024-01-01 12:00:00 UTC
 ```
 
 ## 🛠️ Development

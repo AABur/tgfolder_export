@@ -23,8 +23,15 @@ Get your Telegram API credentials from https://my.telegram.org/apps
 ## Common Commands
 
 ```bash
-# Run the exporter
-./export.py > export.json
+# Run the exporter (JSON format)
+./export.py -j my_export.json
+
+# Run the exporter (text format)
+./export.py -t my_export.txt
+
+# Use default filenames (tgf-list.json or tgf-list.txt)
+./export.py -j  # creates tgf-list.json
+./export.py -t  # creates tgf-list.txt
 
 # Testing
 make test          # Run pytest tests
@@ -87,6 +94,22 @@ The script processes Telegram dialog filters (folders), extracts included peers 
 - Comments should only describe the current state and purpose of the code, not its history or evolution
 - After important functionality added, update README.md accordingly
 - When merging master changes to an active branch, make sure both branches are pulled and up to date first
+
+## Development Workflow for New Code
+
+**CRITICAL: Follow this exact sequence when adding new functionality:**
+
+1. **Write new code** (functions, features, etc.)
+2. **Run existing tests + linting + mypy** with new code:
+   ```bash
+   make check  # Must pass with existing tests unchanged
+   ```
+3. **Only if step 2 passes** → Write new tests for the new functionality
+4. **Ensure test coverage stays at 85% minimum**
+5. **Run full test suite again** to verify everything works
+6. **Commit changes**
+
+**NEVER change existing tests and code simultaneously!** If existing tests fail with new code, fix the code first, not the tests.
 
 ## Testing
 
