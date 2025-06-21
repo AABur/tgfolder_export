@@ -315,51 +315,17 @@ def test_render_result_unicode(mocker: MockerFixture) -> None:
     assert "International" in result
 
 
-def test_main(mocker: MockerFixture) -> None:
-    """Test main function execution with no arguments (backward compatibility)."""
-    # Mock config
-    config_data: dict[str, Any] = {"tg": {"app_id": 12345, "app_hash": "test_hash"}}
-
-    # Mock dialog filter
-    mock_filter = mocker.Mock(spec=types.DialogFilter)
-    mock_filter.id = 1
-    mock_filter.title = mocker.Mock()
-    mock_filter.title.text = "Work"
-    mock_filter.include_peers = []
-
-    # Mock responses
-    mock_filters_response = mocker.Mock()
-    mock_filters_response.filters = [mock_filter]
-
-    # Mock sys.argv to have no additional arguments (backward compatibility)
+def test_main_no_args_shows_help(mocker: MockerFixture) -> None:
+    """Test main function execution with no arguments shows help and exits."""
+    # Mock sys.argv to have no additional arguments
     mocker.patch("sys.argv", ["export.py"])
 
-    mocker.patch("export.get_config", return_value=config_data)
-    mock_client_class = mocker.patch("export.TelegramClient")
-    mock_print = mocker.patch("builtins.print")
-    mocker.patch("export.logging.basicConfig")
+    # Mock the parser to capture the error
+    with pytest.raises(SystemExit) as exc_info:
+        main()
 
-    mock_client = mocker.Mock()
-    mock_client_class.return_value = mock_client
-    mock_client.__enter__ = mocker.Mock(return_value=mock_client)
-    mock_client.__exit__ = mocker.Mock(return_value=None)
-    mock_client.return_value = mock_filters_response
-
-    main()
-
-    # Verify TelegramClient was created with correct params
-    mock_client_class.assert_called_once_with("var/tg.session", 12345, "test_hash")
-
-    # Verify print was called with JSON output
-    mock_print.assert_called_once()
-    printed_output = mock_print.call_args[0][0]
-
-    # Should be valid JSON
-    parsed = json.loads(printed_output)
-    assert isinstance(parsed, list)
-    assert len(parsed) == 1
-    assert parsed[0]["id"] == 1
-    assert parsed[0]["title"] == "Work"
+    # Should exit with error code 2 (argparse error)
+    assert exc_info.value.code == 2
 
 
 def test_render_text_result(mocker: MockerFixture) -> None:

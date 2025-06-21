@@ -169,8 +169,8 @@ def main() -> None:
         "--version", action="version", version=f"tgfolder_export {__version__}"
     )
 
-    # Output format options
-    output_group = parser.add_mutually_exclusive_group()
+    # Output format options (required)
+    output_group = parser.add_mutually_exclusive_group(required=True)
     output_group.add_argument(
         "-j",
         "--json",
@@ -223,9 +223,6 @@ def main() -> None:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(content)
         LOG.info("Export completed successfully")
-    else:
-        # Fallback for backward compatibility (no arguments provided)
-        print(render_result(result))
 
 
 if __name__ == "__main__":

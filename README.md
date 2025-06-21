@@ -45,6 +45,8 @@ app_api_hash=your_api_hash_here
 
 ### Usage
 
+**Note**: One of `-j` or `-t` options is required.
+
 ```bash
 # Export to JSON format (default filename: tgf-list.json)
 ./export.py -j
@@ -57,6 +59,9 @@ app_api_hash=your_api_hash_here
 
 # Export to text with custom filename
 ./export.py -t my_folders.txt
+
+# Show help
+./export.py --help
 ```
 
 ## 📊 Output Formats

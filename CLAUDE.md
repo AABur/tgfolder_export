@@ -23,15 +23,18 @@ Get your Telegram API credentials from https://my.telegram.org/apps
 ## Common Commands
 
 ```bash
-# Run the exporter (JSON format)
+# Run the exporter (JSON format) - required parameter
 ./export.py -j my_export.json
 
-# Run the exporter (text format)
+# Run the exporter (text format) - required parameter  
 ./export.py -t my_export.txt
 
 # Use default filenames (tgf-list.json or tgf-list.txt)
 ./export.py -j  # creates tgf-list.json
 ./export.py -t  # creates tgf-list.txt
+
+# Show help (if no parameters provided, help is shown)
+./export.py --help
 
 # Testing
 make test          # Run pytest tests
