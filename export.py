@@ -4,7 +4,6 @@ import json
 import logging
 import os
 from importlib.metadata import version
-from pprint import pprint  # pylint: disable=unused-import # noqa: F401
 from typing import Any, cast
 
 from dotenv import load_dotenv
@@ -40,9 +39,7 @@ def get_entity_type_name(ent: types.TLObject) -> str:
     if isinstance(ent, types.User):
         return "user"
     if isinstance(ent, types.Channel):
-        if ent.broadcast:
-            return "channel"
-        return "group"
+        return "channel" if ent.broadcast else "group"
     if isinstance(ent, types.Chat):
         return "group"
     raise TypeError(f"Unknown entity type: {type(ent)}")
@@ -50,9 +47,7 @@ def get_entity_type_name(ent: types.TLObject) -> str:
 
 def get_entity_name(ent: types.TLObject) -> None | str:
     if isinstance(ent, types.Channel | types.Chat):
-        if ent.title is None:
-            return None
-        return cast(str, ent.title)
+        return None if ent.title is None else cast(str, ent.title)
     if isinstance(ent, types.User):
         return ((ent.first_name or "") + " " + (ent.last_name or "")).strip()
     raise TypeError(f"Unknown entity type: {type(ent)}")
@@ -66,11 +61,7 @@ def export_entity(ent: types.TLObject) -> dict[str, Any]:
     }
 
     # Only User and Channel entities have username attribute
-    if hasattr(ent, "username"):
-        result["username"] = ent.username
-    else:
-        result["username"] = None
-
+    result["username"] = ent.username if hasattr(ent, "username") else None
     return result
 
 

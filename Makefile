@@ -1,6 +1,6 @@
 .PHONY: init dirs clean mypy ruff test test-cov check build version-patch version-minor version-major
 
-FILES_CHECK = export.py
+FILES_CHECK = .
 
 init: dirs deps
 
