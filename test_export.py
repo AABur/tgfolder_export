@@ -18,20 +18,25 @@ from export import (
 
 def test_get_config(mocker):
     """Test config loading."""
-    config_data = {
-        'tg': {
-            'app_id': 12345,
-            'app_hash': 'test_hash'
-        }
-    }
-    
-    mocker.patch('export.yaml.safe_load', return_value=config_data)
-    mocker.patch('builtins.open')
+    mocker.patch('export.load_dotenv')
+    mocker.patch('export.os.getenv', side_effect=lambda key: {
+        'app_api_id': '12345',
+        'app_api_hash': 'test_hash'
+    }.get(key))
     
     config = get_config()
     
     assert config['tg']['app_id'] == 12345
     assert config['tg']['app_hash'] == 'test_hash'
+
+
+def test_get_config_missing_env_vars(mocker):
+    """Test config loading with missing environment variables."""
+    mocker.patch('export.load_dotenv')
+    mocker.patch('export.os.getenv', return_value=None)
+    
+    with pytest.raises(ValueError, match="Missing required environment variables"):
+        get_config()
 
 
 def test_get_entity_type_name_user(mocker):

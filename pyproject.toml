@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tgfolder_export"
-version = "0.0.1"
+version = "0.1.0"
 description = "Export Telegram folder contents as JSON"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "AABur"}]
 requires-python = ">=3.11"
 dependencies = [
-    "pyyaml",
+    "python-dotenv",
     "telethon",
 ]
 

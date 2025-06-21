@@ -12,12 +12,13 @@ source .venv/bin/activate  # Activate virtual environment
 
 ## Configuration Required
 
-Before running the application, create `var/config.yml`:
-```yaml
-tg:
-  app_id: ...      # Telegram app ID
-  app_hash: ...    # Telegram app hash
+Before running the application, create `.env` file in the project root (copy from `.env.sample`):
+```bash
+app_api_id=12345678
+app_api_hash=your_api_hash_here
 ```
+
+Get your Telegram API credentials from https://my.telegram.org/apps
 
 ## Common Commands
 

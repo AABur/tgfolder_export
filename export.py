@@ -1,18 +1,36 @@
 #!/usr/bin/env python3
+import argparse
 import json
 import logging
+import os
+from importlib.metadata import version
 from pprint import pprint  # pylint: disable=unused-import # noqa: F401
 from typing import Any, cast
 
-import yaml
+from dotenv import load_dotenv
 from telethon import functions, types
 from telethon.errors.rpcerrorlist import ChannelPrivateError
 from telethon.sync import TelegramClient
 
 
 def get_config() -> dict[str, Any]:
-    with open("var/config.yml", encoding="utf-8") as inp:
-        return cast(dict[str, Any], yaml.safe_load(inp))
+    load_dotenv()
+
+    api_id = os.getenv("app_api_id")
+    api_hash = os.getenv("app_api_hash")
+
+    if not api_id or not api_hash:
+        raise ValueError(
+            "Missing required environment variables. "
+            "Please copy .env.sample to .env and set app_api_id and app_api_hash"
+        )
+
+    return {
+        "tg": {
+            "app_id": int(api_id),
+            "app_hash": api_hash,
+        }
+    }
 
 
 LOG = logging.getLogger(__name__)
@@ -83,6 +101,19 @@ def render_result(result: list[dict[str, Any]]) -> str:
 
 
 def main() -> None:
+    try:
+        __version__ = version("tgfolder_export")
+    except Exception:
+        __version__ = "unknown"
+
+    parser = argparse.ArgumentParser(
+        description="Export Telegram folder contents as JSON"
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"tgfolder_export {__version__}"
+    )
+    parser.parse_args()
+
     logging.basicConfig(level=logging.INFO)
     config = get_config()
     client = TelegramClient(

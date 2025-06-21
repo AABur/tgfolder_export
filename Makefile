@@ -1,4 +1,4 @@
-.PHONY: init dirs clean mypy ruff test test-cov check build
+.PHONY: init dirs clean mypy ruff test test-cov check build version-patch version-minor version-major
 
 FILES_CHECK = export.py
 
@@ -38,3 +38,12 @@ check: ruff mypy test
 
 build:
 	uv build
+
+version-patch:
+	uv version --bump patch
+
+version-minor:
+	uv version --bump minor
+
+version-major:
+	uv version --bump major

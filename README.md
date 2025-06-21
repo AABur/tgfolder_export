@@ -34,12 +34,11 @@ source .venv/bin/activate
 
 ### Configuration
 
-Create a `var/config.yml` file with your Telegram API credentials:
+Create a `.env` file in the project root (copy from `.env.sample`):
 
-```yaml
-tg:
-  app_id: 12345678        # Your Telegram app ID
-  app_hash: "your_hash"   # Your Telegram app hash
+```bash
+app_api_id=12345678
+app_api_hash=your_api_hash_here
 ```
 
 > 💡 **How to get API credentials**: Visit [my.telegram.org/apps](https://my.telegram.org/apps), log in, and create a new application.
