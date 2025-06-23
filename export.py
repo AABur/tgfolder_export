@@ -3,7 +3,7 @@ import argparse
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from importlib.metadata import version
 from typing import Any, cast
 
@@ -48,7 +48,7 @@ def get_entity_type_name(ent: types.TLObject) -> str:
 
 def get_entity_name(ent: types.TLObject) -> None | str:
     if isinstance(ent, types.Channel | types.Chat):
-        return None if ent.title is None else cast(str, ent.title)
+        return None if ent.title is None else cast("str", ent.title)
     if isinstance(ent, types.User):
         return ((ent.first_name or "") + " " + (ent.last_name or "")).strip()
     raise TypeError(f"Unknown entity type: {type(ent)}")
@@ -95,20 +95,14 @@ def render_result(result: list[dict[str, Any]]) -> str:
 
 def render_text_result(result: list[dict[str, Any]]) -> str:
     """Render results as formatted text."""
-    lines = []
-    lines.append("TELEGRAM FOLDERS EXPORT")
-    lines.append("=======================")
-    lines.append("")
-
+    lines = ["TELEGRAM FOLDERS EXPORT", "=======================", ""]
     total_folders = len(result)
     total_channels = 0
     total_groups = 0
     total_users = 0
 
     for folder in result:
-        lines.append(f"Folder: {folder['title']}")
-        lines.append("-" * (8 + len(folder["title"])))
-
+        lines.extend((f"Folder: {folder['title']}", "-" * (8 + len(folder["title"]))))
         # Group peers by type
         channels = [p for p in folder["peers"] if p["type"] == "channel"]
         groups = [p for p in folder["peers"] if p["type"] == "group"]
@@ -143,16 +137,14 @@ def render_text_result(result: list[dict[str, Any]]) -> str:
             lines.append("")
 
         if not (channels or groups or users):
-            lines.append("No items")
-            lines.append("")
-
-    # Summary
-    lines.append("=======================")
-    lines.append(
-        f"Total: {total_folders} folders, {total_channels} channels, {total_groups} groups, {total_users} users"
+            lines.extend(("No items", ""))
+    lines.extend(
+        (
+            "=======================",
+            f"Total: {total_folders} folders, {total_channels} channels, {total_groups} groups, {total_users} users",
+            f"Generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')} UTC",
+        )
     )
-    lines.append(f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
-
     return "\n".join(lines)
 
 

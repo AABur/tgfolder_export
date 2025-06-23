@@ -31,7 +31,7 @@ test:
 	uv run pytest
 
 test-cov:
-	uv run pytest --cov=export --cov-report=html --cov-report=term
+	uv run pytest --cov --cov-report=html --cov-report=term
 	@echo "HTML coverage report generated in htmlcov/index.html"
 
 check: ruff mypy test
