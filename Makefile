@@ -1,49 +1,27 @@
-.PHONY: init dirs clean mypy ruff test test-cov check build version-patch version-minor version-major
+.PHONY: init clean mypy lint test test-cov check
 
-FILES_CHECK = .
-
-init: dirs deps
-
-deps:
+init:
+	mkdir -p var
 	uv sync --dev
 
-dirs:
-	if [ ! -e var/run ]; then mkdir -p var/run; fi
-	if [ ! -e var/log ]; then mkdir -p var/log; fi
-
 clean:
-	find -name '*.pyc' -delete
-	find -name '*.swp' -delete
-	find -name '__pycache__' -delete
-	rm -rf *.egg-info
-	rm -rf dist/*
-	rm -rf .coverage
-	rm -rf htmlcov/
+	find . -name '*.pyc' -delete
+	find . -name '*.swp' -delete  
+	find . -name '__pycache__' -delete
+	rm -rf *.egg-info dist .coverage htmlcov
 
 mypy:
-	uv run mypy $(FILES_CHECK)
+	uv run mypy .
 
-ruff:
-	uv run ruff check --fix $(FILES_CHECK)
-	uv run ruff format --check $(FILES_CHECK)
+lint:
+	uv run ruff check --fix .
+	uv run ruff format --check .
 
 test:
 	uv run pytest
 
 test-cov:
 	uv run pytest --cov --cov-report=html --cov-report=term
-	@echo "HTML coverage report generated in htmlcov/index.html"
+	@echo "HTML coverage report: htmlcov/index.html"
 
-check: ruff mypy test
-
-build:
-	uv build
-
-version-patch:
-	uv version --bump patch
-
-version-minor:
-	uv version --bump minor
-
-version-major:
-	uv version --bump major
+check: lint mypy test

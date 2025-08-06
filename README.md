@@ -12,7 +12,10 @@ Export lists of channels and groups from your Telegram folders without downloadi
 - 🚀 **Fast & Modern**: Built with [uv](https://docs.astral.sh/uv/) for blazing-fast dependency management
 - 📁 **Folder Export**: Export all channels and groups from your Telegram folders
 - 🔒 **Privacy-First**: Only exports metadata (names, IDs, usernames) - no messages
-- 📄 **JSON Output**: Clean, structured JSON format for easy processing
+- 📄 **Multiple Formats**: JSON and human-readable text output formats
+- 📊 **Progress Tracking**: Real-time progress bar for large exports
+- 🔧 **Configurable**: Environment-based logging and configuration
+- 🛡️ **Robust Error Handling**: Graceful handling of private channels and API errors
 - 🛠️ **Developer-Friendly**: Full type hints, linting, and modern Python practices
 
 ## 🚀 Quick Start
@@ -62,6 +65,20 @@ app_api_hash=your_api_hash_here
 
 # Show help
 ./export.py --help
+```
+
+### Environment Variables
+
+You can customize the behavior using environment variables:
+
+```bash
+# Set logging level (DEBUG, INFO, WARNING, ERROR)
+export LOG_LEVEL=DEBUG
+./export.py -j
+
+# Custom session file location (default: var/tg.session)
+export TG_SESSION_PATH=/path/to/custom.session
+./export.py -j
 ```
 
 ## 📊 Output Formats
@@ -124,8 +141,8 @@ make test-cov      # Run tests with coverage report
 # Run all checks
 make check         # Linting, type checking, and tests
 
-# Individual tools
-make ruff          # Linting and formatting
+# Individual tools  
+make lint          # Linting and formatting
 make mypy          # Type checking
 ```
 
@@ -134,7 +151,6 @@ make mypy          # Type checking
 ```bash
 make init      # Initialize development environment
 make check     # Run all linting, type checking, and tests
-make build     # Build the package
 make clean     # Clean up generated files
 ```
 

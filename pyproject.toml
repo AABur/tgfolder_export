@@ -10,10 +10,10 @@ readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "AABur" }]
 requires-python = ">=3.11"
-dependencies = ["python-dotenv", "telethon"]
+dependencies = ["python-dotenv", "telethon", "tqdm"]
 
 [project.optional-dependencies]
-dev = ["mypy", "ruff", "types-pyyaml", "pytest", "pytest-cov", "pytest-mock"]
+dev = ["mypy", "ruff", "types-pyyaml", "types-tqdm", "pytest", "pytest-cov", "pytest-mock"]
 
 [project.scripts]
 tgfolder_export = "export:main"
@@ -137,3 +137,14 @@ testpaths = ["."]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.16.1",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.1",
+    "ruff>=0.12.0",
+    "types-pyyaml>=6.0.12.20250516",
+    "types-tqdm>=4.67.0.20250516",
+]

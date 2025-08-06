@@ -9,8 +9,13 @@ from typing import Any, cast
 
 from dotenv import load_dotenv
 from telethon import functions, types
-from telethon.errors.rpcerrorlist import ChannelPrivateError
+from telethon.errors.rpcerrorlist import (
+    AuthKeyError,
+    ChannelPrivateError,
+    FloodWaitError,
+)
 from telethon.sync import TelegramClient
+from tqdm import tqdm
 
 
 def get_config() -> dict[str, Any]:
@@ -25,9 +30,16 @@ def get_config() -> dict[str, Any]:
             "Please copy .env.sample to .env and set app_api_id and app_api_hash"
         )
 
+    try:
+        app_id = int(api_id)
+        if app_id <= 0:
+            raise ValueError("app_id must be positive")
+    except ValueError as e:
+        raise ValueError(f"Invalid app_api_id: {e}") from e
+
     return {
         "tg": {
-            "app_id": int(api_id),
+            "app_id": app_id,
             "app_hash": api_hash,
         }
     }
@@ -77,9 +89,9 @@ def export_dialog_filter(
     for input_peer in dlg_filter.include_peers:
         try:
             ent = client.get_entity(input_peer)
-        except ChannelPrivateError as ex:
+        except (ChannelPrivateError, FloodWaitError, AuthKeyError) as ex:
             LOG.error(
-                "Could not get data for peer %s, error is %s",
+                "Telegram API error for peer %s: %s",
                 input_peer.to_dict(),
                 ex,
             )
@@ -102,11 +114,20 @@ def render_text_result(result: list[dict[str, Any]]) -> str:
     total_users = 0
 
     for folder in result:
-        lines.extend((f"Folder: {folder['title']}", "-" * (8 + len(folder["title"]))))
-        # Group peers by type
-        channels = [p for p in folder["peers"] if p["type"] == "channel"]
-        groups = [p for p in folder["peers"] if p["type"] == "group"]
-        users = [p for p in folder["peers"] if p["type"] == "user"]
+        folder_prefix_length = 8  # "Folder: "
+        lines.extend(
+            (
+                f"Folder: {folder['title']}",
+                "-" * (folder_prefix_length + len(folder["title"])),
+            )
+        )
+        # Distribute peers into separate lists by type (channel, group, user)
+        channels: list[dict[str, Any]] = []
+        groups: list[dict[str, Any]] = []
+        users: list[dict[str, Any]] = []
+        type_map = {"channel": channels, "group": groups, "user": users}
+        for peer in folder["peers"]:
+            type_map.get(peer["type"], []).append(peer)
 
         total_channels += len(channels)
         total_groups += len(groups)
@@ -148,7 +169,14 @@ def render_text_result(result: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def main() -> None:
+def setup_logging() -> None:
+    """Configure logging settings."""
+    log_level = os.getenv("LOG_LEVEL", "INFO")
+    logging.basicConfig(level=getattr(logging, log_level.upper()))
+
+
+def create_argument_parser() -> argparse.ArgumentParser:
+    """Create and configure argument parser."""
     try:
         __version__ = version("tgfolder_export")
     except Exception:
@@ -179,42 +207,65 @@ def main() -> None:
         metavar="FILE",
         help="Export to text format (default: tgf-list.txt)",
     )
+    return parser
 
+
+def process_telegram_data(client: TelegramClient) -> list[dict[str, Any]]:
+    """Process Telegram folder data and return structured results."""
+    result = []
+    dlg_filters = client(functions.messages.GetDialogFiltersRequest())
+
+    # Filter out default folder and show progress
+    custom_filters = [
+        f for f in dlg_filters.filters if not isinstance(f, types.DialogFilterDefault)
+    ]
+
+    for dlg_filter in tqdm(custom_filters, desc="Processing folders"):
+        LOG.info("Processing folder %s", dlg_filter.title.text)
+        result.append(export_dialog_filter(client, dlg_filter))
+    return result
+
+
+def write_output(filename: str, content: str) -> None:
+    """Write content to file and log completion."""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
+    LOG.info("Export completed successfully")
+
+
+def save_results(data: list[dict[str, Any]], args: argparse.Namespace) -> None:
+    """Save results in the requested format."""
+    if args.json:
+        output_file = args.json
+        content = render_result(data)
+        LOG.info("Writing JSON output to %s", output_file)
+        write_output(output_file, content)
+    elif args.text:
+        output_file = args.text
+        content = render_text_result(data)
+        LOG.info("Writing text output to %s", output_file)
+        write_output(output_file, content)
+
+
+def main() -> None:
+    """Main entry point."""
+    parser = create_argument_parser()
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    setup_logging()
     config = get_config()
+    session_path = os.getenv("TG_SESSION_PATH", "var/tg.session")
+
     client = TelegramClient(
-        "var/tg.session",
+        session_path,
         config["tg"]["app_id"],
         config["tg"]["app_hash"],
     )
-    result = []
-    with client:
-        dlg_filters = client(functions.messages.GetDialogFiltersRequest())
-        for dlg_filter in dlg_filters.filters:
-            if isinstance(dlg_filter, types.DialogFilterDefault):
-                continue
-            LOG.info("Processing folder %s", dlg_filter.title.text)
-            result.append(export_dialog_filter(client, dlg_filter))
 
-    # Determine output file and format
-    if args.json:
-        output_file = args.json
-        content = render_result(result)
-        LOG.info("Writing JSON output to %s", output_file)
-        # Write to file
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(content)
-        LOG.info("Export completed successfully")
-    elif args.text:
-        output_file = args.text
-        content = render_text_result(result)
-        LOG.info("Writing text output to %s", output_file)
-        # Write to file
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(content)
-        LOG.info("Export completed successfully")
+    with client:
+        result = process_telegram_data(client)
+
+    save_results(result, args)
 
 
 if __name__ == "__main__":
