@@ -42,16 +42,13 @@ make test-cov      # Run tests with coverage report
 
 # Code quality checks
 make check          # Run all linting, type checking, and tests
-make ruff          # Run ruff linter and formatter
+make lint          # Run ruff linter and formatter
 make mypy          # Run mypy type checker
 
 # Individual linting tools
 uv run ruff check export.py
 uv run ruff format export.py
 uv run mypy export.py
-
-# Build package
-make build
 
 # Clean up
 make clean
@@ -61,11 +58,12 @@ make clean
 
 This is a single-file Python script that exports Telegram folder contents using the Telethon library. The main components:
 
-- **Configuration**: Loads Telegram API credentials from `var/config.yml`
-- **Entity Processing**: Functions to extract and format channel/group information (`get_entity_type_name`, `get_entity_name`, `export_entity`)
+- **Configuration**: Loads Telegram API credentials from `.env` file
+- **Entity Processing**: Functions to extract and format channel/group information (`get_entity_type_name`, `get_entity_name`, `export_entity`)  
 - **Dialog Filter Export**: Main logic in `export_dialog_filter` that processes each Telegram folder and extracts peer information
-- **Error Handling**: Handles `ChannelPrivateError` for inaccessible channels
-- **Output**: JSON serialization of folder structure with channel/group metadata
+- **Error Handling**: Handles `ChannelPrivateError`, `FloodWaitError`, and `AuthKeyError` for robust API interaction
+- **Progress Tracking**: Uses tqdm for real-time progress visualization during folder processing
+- **Output**: JSON and text format support with structured metadata serialization
 
 The script processes Telegram dialog filters (folders), extracts included peers (channels/groups), and outputs structured JSON data with entity type, ID, username, and name information.
 
