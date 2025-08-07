@@ -23,17 +23,16 @@ Get your Telegram API credentials from https://my.telegram.org/apps
 ## Common Commands
 
 ```bash
-# Run the exporter (JSON format) - required parameter
+# Using uv (recommended - handles dependencies automatically)
+uv run export.py -j my_export.json    # JSON format
+uv run export.py -t my_export.txt     # Text format
+uv run export.py -j                   # Default JSON (tgf-list.json)
+uv run export.py -t                   # Default text (tgf-list.txt)
+uv run export.py --help              # Show help
+
+# Traditional execution (requires activated virtual environment)
 ./export.py -j my_export.json
-
-# Run the exporter (text format) - required parameter  
 ./export.py -t my_export.txt
-
-# Use default filenames (tgf-list.json or tgf-list.txt)
-./export.py -j  # creates tgf-list.json
-./export.py -t  # creates tgf-list.txt
-
-# Show help (if no parameters provided, help is shown)
 ./export.py --help
 
 # Testing
@@ -56,7 +55,7 @@ make clean
 
 ## Architecture
 
-This is a single-file Python script that exports Telegram folder contents using the Telethon library. The main components:
+This is a single-file Python script that exports Telegram folder contents using the Telethon library. The script includes inline metadata for uv (PEP 723), allowing direct execution without manual dependency management. The main components:
 
 - **Configuration**: Loads Telegram API credentials from `.env` file
 - **Entity Processing**: Functions to extract and format channel/group information (`get_entity_type_name`, `get_entity_name`, `export_entity`)  

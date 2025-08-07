@@ -10,6 +10,7 @@ Export lists of channels and groups from your Telegram folders without downloadi
 ## ✨ Features
 
 - 🚀 **Fast & Modern**: Built with [uv](https://docs.astral.sh/uv/) for blazing-fast dependency management
+- 📦 **Zero-Setup**: Inline script metadata (PEP 723) allows direct execution with `uv run`
 - 📁 **Folder Export**: Export all channels and groups from your Telegram folders
 - 🔒 **Privacy-First**: Only exports metadata (names, IDs, usernames) - no messages
 - 📄 **Multiple Formats**: JSON and human-readable text output formats
@@ -28,11 +29,21 @@ Export lists of channels and groups from your Telegram folders without downloadi
 
 ### Installation
 
+#### Option 1: Traditional Setup
 ```bash
 git clone https://github.com/AABur/tgfolder_export.git
 cd tgfolder_export
 make init
 source .venv/bin/activate
+```
+
+#### Option 2: Direct Script Execution (Recommended)
+The script includes inline metadata for uv, allowing direct execution without setup:
+```bash
+git clone https://github.com/AABur/tgfolder_export.git
+cd tgfolder_export
+# uv will automatically install Python 3.11+ and dependencies
+uv run export.py -j
 ```
 
 ### Configuration
@@ -51,19 +62,16 @@ app_api_hash=your_api_hash_here
 **Note**: One of `-j` or `-t` options is required.
 
 ```bash
-# Export to JSON format (default filename: tgf-list.json)
+# Using uv (recommended - handles dependencies automatically)
+uv run export.py -j                    # JSON format (default: tgf-list.json)
+uv run export.py -j my_folders.json    # JSON with custom filename
+uv run export.py -t                    # Text format (default: tgf-list.txt) 
+uv run export.py -t my_folders.txt     # Text with custom filename
+uv run export.py --help               # Show help
+
+# Traditional execution (requires activated virtual environment)
 ./export.py -j
-
-# Export to JSON with custom filename
-./export.py -j my_folders.json
-
-# Export to text format (default filename: tgf-list.txt)
-./export.py -t
-
-# Export to text with custom filename
 ./export.py -t my_folders.txt
-
-# Show help
 ./export.py --help
 ```
 
@@ -74,11 +82,11 @@ You can customize the behavior using environment variables:
 ```bash
 # Set logging level (DEBUG, INFO, WARNING, ERROR)
 export LOG_LEVEL=DEBUG
-./export.py -j
+uv run export.py -j
 
 # Custom session file location (default: var/tg.session)
 export TG_SESSION_PATH=/path/to/custom.session
-./export.py -j
+uv run export.py -j
 ```
 
 ## 📊 Output Formats
