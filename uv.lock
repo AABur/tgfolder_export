@@ -275,7 +275,7 @@ wheels = [
 [[package]]
 name = "tgfolder-export"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "python-dotenv" },
     { name = "telethon" },
@@ -283,17 +283,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-dev = [
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "ruff" },
-    { name = "types-pyyaml" },
-    { name = "types-tqdm" },
-]
-
-[package.dev-dependencies]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
@@ -318,17 +307,6 @@ requires-dist = [
     { name = "types-tqdm", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=1.16.1" },
-    { name = "pytest", specifier = ">=8.4.0" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "pytest-mock", specifier = ">=3.14.1" },
-    { name = "ruff", specifier = ">=0.12.0" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20250516" },
-    { name = "types-tqdm", specifier = ">=4.67.0.20250516" },
-]
 
 [[package]]
 name = "tomli"
