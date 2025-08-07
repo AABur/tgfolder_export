@@ -3,7 +3,7 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "python-dotenv",
-#     "telethon", 
+#     "telethon",
 #     "tqdm"
 # ]
 # ///
@@ -122,8 +122,8 @@ def render_text_result(result: list[dict[str, Any]]) -> str:
     total_groups = 0
     total_users = 0
 
+    folder_prefix_length = 8  # "Folder: "
     for folder in result:
-        folder_prefix_length = 8  # "Folder: "
         lines.extend(
             (
                 f"Folder: {folder['title']}",
