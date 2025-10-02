@@ -8,6 +8,8 @@
 # ]
 # ///
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -26,8 +28,21 @@ from telethon.errors.rpcerrorlist import (
 from telethon.sync import TelegramClient
 from tqdm import tqdm
 
+# Default file names
+DEFAULT_JSON_FILE = "tgf-list.json"
+DEFAULT_TEXT_FILE = "tgf-list.txt"
+DEFAULT_SESSION_PATH = "var/tg.session"
+
 
 def get_config() -> dict[str, Any]:
+    """Load and validate Telegram API configuration from environment variables.
+
+    Returns:
+        Configuration dictionary with Telegram API credentials.
+
+    Raises:
+        ValueError: If required environment variables are missing or invalid.
+    """
     load_dotenv()
 
     api_id = os.getenv("app_api_id")
@@ -35,16 +50,20 @@ def get_config() -> dict[str, Any]:
 
     if not api_id or not api_hash:
         raise ValueError(
-            "Missing required environment variables. "
-            "Please copy .env.sample to .env and set app_api_id and app_api_hash"
+            "Missing required environment variables: app_api_id and app_api_hash. "
+            "Please copy .env.sample to .env and set these values"
         )
 
     try:
         app_id = int(api_id)
         if app_id <= 0:
-            raise ValueError("app_id must be positive")
+            raise ValueError(f"app_api_id must be a positive integer, got: {app_id}")
     except ValueError as e:
-        raise ValueError(f"Invalid app_api_id: {e}") from e
+        if "invalid literal" in str(e).lower():
+            raise ValueError(
+                f"app_api_id must be a valid integer, got: {api_id!r}"
+            ) from e
+        raise
 
     return {
         "tg": {
@@ -58,6 +77,17 @@ LOG = logging.getLogger(__name__)
 
 
 def get_entity_type_name(ent: types.TLObject) -> str:
+    """Determine entity type from Telegram API object.
+
+    Args:
+        ent: Telegram API entity (User, Channel, or Chat).
+
+    Returns:
+        Entity type: "user", "channel", or "group".
+
+    Raises:
+        TypeError: If entity type is not supported.
+    """
     if isinstance(ent, types.User):
         return "user"
     if isinstance(ent, types.Channel):
@@ -67,7 +97,18 @@ def get_entity_type_name(ent: types.TLObject) -> str:
     raise TypeError(f"Unknown entity type: {type(ent)}")
 
 
-def get_entity_name(ent: types.TLObject) -> None | str:
+def get_entity_name(ent: types.TLObject) -> str | None:
+    """Extract display name from Telegram entity.
+
+    Args:
+        ent: Telegram API entity.
+
+    Returns:
+        Display name or None if not available.
+
+    Raises:
+        TypeError: If entity type is not supported.
+    """
     if isinstance(ent, types.Channel | types.Chat):
         return None if ent.title is None else cast("str", ent.title)
     if isinstance(ent, types.User):
@@ -76,6 +117,14 @@ def get_entity_name(ent: types.TLObject) -> None | str:
 
 
 def export_entity(ent: types.TLObject) -> dict[str, Any]:
+    """Convert Telegram entity to standardized export format.
+
+    Args:
+        ent: Telegram API entity to export.
+
+    Returns:
+        Dictionary with entity data: type, id, name, username.
+    """
     result = {
         "type": get_entity_type_name(ent),
         "id": ent.id,
@@ -90,6 +139,15 @@ def export_entity(ent: types.TLObject) -> dict[str, Any]:
 def export_dialog_filter(
     client: TelegramClient, dlg_filter: types.DialogFilter
 ) -> dict[str, Any]:
+    """Export Telegram folder and its peers to structured format.
+
+    Args:
+        client: Authenticated Telegram client.
+        dlg_filter: Telegram dialog filter (folder) to export.
+
+    Returns:
+        Dictionary with folder data: id, title, and list of peers.
+    """
     result = {
         "id": dlg_filter.id,
         "title": dlg_filter.title.text,
@@ -100,8 +158,9 @@ def export_dialog_filter(
             ent = client.get_entity(input_peer)
         except (ChannelPrivateError, FloodWaitError, AuthKeyError) as ex:
             LOG.error(
-                "Telegram API error for peer %s: %s",
-                input_peer.to_dict(),
+                "Telegram API error for peer in folder '%s': %s - %s",
+                dlg_filter.title.text,
+                type(ex).__name__,
                 ex,
             )
             continue
@@ -180,8 +239,13 @@ def render_text_result(result: list[dict[str, Any]]) -> str:
 
 def setup_logging() -> None:
     """Configure logging settings."""
-    log_level = os.getenv("LOG_LEVEL", "INFO")
-    logging.basicConfig(level=getattr(logging, log_level.upper()))
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+
+    if log_level not in valid_levels:
+        log_level = "INFO"
+
+    logging.basicConfig(level=getattr(logging, log_level))
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -204,17 +268,17 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "-j",
         "--json",
         nargs="?",
-        const="tgf-list.json",
+        const=DEFAULT_JSON_FILE,
         metavar="FILE",
-        help="Export to JSON format (default: tgf-list.json)",
+        help=f"Export to JSON format (default: {DEFAULT_JSON_FILE})",
     )
     output_group.add_argument(
         "-t",
         "--text",
         nargs="?",
-        const="tgf-list.txt",
+        const=DEFAULT_TEXT_FILE,
         metavar="FILE",
-        help="Export to text format (default: tgf-list.txt)",
+        help=f"Export to text format (default: {DEFAULT_TEXT_FILE})",
     )
     return parser
 
@@ -263,7 +327,7 @@ def main() -> None:
 
     setup_logging()
     config = get_config()
-    session_path = os.getenv("TG_SESSION_PATH", "var/tg.session")
+    session_path = os.getenv("TG_SESSION_PATH", DEFAULT_SESSION_PATH)
 
     client = TelegramClient(
         session_path,

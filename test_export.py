@@ -46,6 +46,36 @@ def test_get_config_missing_env_vars(mocker: MockerFixture) -> None:
         get_config()
 
 
+def test_get_config_invalid_api_id_negative(mocker: MockerFixture) -> None:
+    """Test config loading with negative API ID."""
+    mocker.patch("export.load_dotenv")
+    mocker.patch(
+        "export.os.getenv",
+        side_effect=lambda key: {
+            "app_api_id": "-123",
+            "app_api_hash": "test_hash",
+        }.get(key),
+    )
+
+    with pytest.raises(ValueError, match="app_api_id must be a positive integer, got: -123"):
+        get_config()
+
+
+def test_get_config_invalid_api_id_string(mocker: MockerFixture) -> None:
+    """Test config loading with non-numeric API ID."""
+    mocker.patch("export.load_dotenv")
+    mocker.patch(
+        "export.os.getenv",
+        side_effect=lambda key: {
+            "app_api_id": "not_a_number",
+            "app_api_hash": "test_hash",
+        }.get(key),
+    )
+
+    with pytest.raises(ValueError, match="app_api_id must be a valid integer, got: 'not_a_number'"):
+        get_config()
+
+
 def test_get_entity_type_name_user(mocker: MockerFixture) -> None:
     """Test entity type detection for User."""
     user = mocker.Mock(spec=types.User)
@@ -455,3 +485,12 @@ def test_main_text_output(mocker: MockerFixture) -> None:
     written_content = "".join(call.args[0] for call in mock_open().write.call_args_list)
     assert "TELEGRAM FOLDERS EXPORT" in written_content
     assert "Folder: Personal" in written_content
+
+
+def test_render_text_result_empty_folders(mocker: MockerFixture) -> None:
+    """Test text rendering with empty folder list."""
+    result = render_text_result([])
+
+    assert "TELEGRAM FOLDERS EXPORT" in result
+    assert "Total: 0 folders, 0 channels, 0 groups, 0 users" in result
+    assert "Generated:" in result

@@ -18,7 +18,13 @@ lib/
 lib64/
 parts/
 sdist/
-var/
+# Telegram session files and runtime data
+var/*.session
+var/*.session-journal
+
+# Keep var/ directory but ignore session files
+!var/
+!var/.gitkeep
 wheels/
 share/python-wheels/
 *.egg-info/
@@ -176,9 +182,9 @@ cython_debug/
 .abstra/
 
 # Visual Studio Code
-#  Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
+#  Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore
 #  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#  and can be added to the global gitignore or merged into this file. However, if you prefer, 
+#  and can be added to the global gitignore or merged into this file. However, if you prefer,
 #  you could uncomment the following to ignore the entire vscode folder
 .vscode/
 
@@ -202,3 +208,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific output files
+tgf-list.json
+tgf-list.txt
+.serena/.gitignore
+.serena/project.yml
+.serena/memories/code_style_conventions.md
+.serena/memories/codebase_structure.md
+.serena/memories/project_overview.md
+.serena/memories/suggested_commands.md
+.serena/memories/task_completion_checklist.md
+uv.lock

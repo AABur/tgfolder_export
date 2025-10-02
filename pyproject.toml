@@ -8,9 +8,6 @@ authors = [{ name = "AABur" }]
 requires-python = ">=3.11"
 dependencies = ["python-dotenv", "telethon", "tqdm"]
 
-[project.optional-dependencies]
-dev = ["mypy", "ruff", "types-pyyaml", "types-tqdm", "pytest", "pytest-cov", "pytest-mock"]
-
 [project.scripts]
 tgfolder_export = "export:main"
 
@@ -130,3 +127,13 @@ testpaths = ["."]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13.0",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.1.0",
+    "pytest-mock>=3.14.1",
+    "ruff>=0.8.0",
+    "types-tqdm>=4.66.0",
+]
