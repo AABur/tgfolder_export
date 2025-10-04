@@ -75,6 +75,23 @@ uv run export.py --help               # Show help
 ./export.py --help
 ```
 
+### Session Management
+
+On first run, you'll be prompted to authenticate with Telegram:
+- Enter your phone number
+- Enter the verification code sent to your Telegram app
+- If you have 2FA enabled, enter your password
+
+**Session Storage**: Authentication is saved in `.tempts/tg.session` (hidden directory, auto-created)
+
+**Session Expiry**: Sessions expire after 7 days. When expired, you'll be prompted to re-authenticate.
+
+**Clear Session**: Force clear saved session to re-authenticate:
+```bash
+uv run export.py --clear-session
+./export.py --clear-session
+```
+
 ### Environment Variables
 
 You can customize the behavior using environment variables:
@@ -82,10 +99,6 @@ You can customize the behavior using environment variables:
 ```bash
 # Set logging level (DEBUG, INFO, WARNING, ERROR)
 export LOG_LEVEL=DEBUG
-uv run export.py -j
-
-# Custom session file location (default: var/tg.session)
-export TG_SESSION_PATH=/path/to/custom.session
 uv run export.py -j
 ```
 

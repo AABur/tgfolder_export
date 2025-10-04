@@ -57,7 +57,9 @@ def test_get_config_invalid_api_id_negative(mocker: MockerFixture) -> None:
         }.get(key),
     )
 
-    with pytest.raises(ValueError, match="app_api_id must be a positive integer, got: -123"):
+    with pytest.raises(
+        ValueError, match="app_api_id must be a positive integer, got: -123"
+    ):
         get_config()
 
 
@@ -72,7 +74,9 @@ def test_get_config_invalid_api_id_string(mocker: MockerFixture) -> None:
         }.get(key),
     )
 
-    with pytest.raises(ValueError, match="app_api_id must be a valid integer, got: 'not_a_number'"):
+    with pytest.raises(
+        ValueError, match="app_api_id must be a valid integer, got: 'not_a_number'"
+    ):
         get_config()
 
 
@@ -428,7 +432,7 @@ def test_main_json_output(mocker: MockerFixture) -> None:
     main()
 
     # Verify TelegramClient was created with correct params
-    mock_client_class.assert_called_once_with("var/tg.session", 12345, "test_hash")
+    mock_client_class.assert_called_once_with(".tempts/tg.session", 12345, "test_hash")
 
     # Verify file was opened for writing
     mock_open.assert_called_once_with("test.json", "w", encoding="utf-8")
@@ -476,7 +480,7 @@ def test_main_text_output(mocker: MockerFixture) -> None:
     main()
 
     # Verify TelegramClient was created with correct params
-    mock_client_class.assert_called_once_with("var/tg.session", 12345, "test_hash")
+    mock_client_class.assert_called_once_with(".tempts/tg.session", 12345, "test_hash")
 
     # Verify file was opened for writing
     mock_open.assert_called_once_with("test.txt", "w", encoding="utf-8")

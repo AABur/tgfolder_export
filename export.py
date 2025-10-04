@@ -14,8 +14,9 @@ import argparse
 import json
 import logging
 import os
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from importlib.metadata import version
+from pathlib import Path
 from typing import Any, cast
 
 from dotenv import load_dotenv
@@ -31,7 +32,9 @@ from tqdm import tqdm
 # Default file names
 DEFAULT_JSON_FILE = "tgf-list.json"
 DEFAULT_TEXT_FILE = "tgf-list.txt"
-DEFAULT_SESSION_PATH = "var/tg.session"
+DEFAULT_SESSION_DIR = ".tempts"
+DEFAULT_SESSION_FILE = "tg.session"
+SESSION_TTL_DAYS = 7
 
 
 def get_config() -> dict[str, Any]:
@@ -71,6 +74,78 @@ def get_config() -> dict[str, Any]:
             "app_hash": api_hash,
         }
     }
+
+
+def get_session_path() -> Path:
+    """Get session file path, creating directory if needed.
+
+    Returns:
+        Path to the session file in hidden .tempts directory.
+    """
+    session_dir = Path(DEFAULT_SESSION_DIR)
+    session_dir.mkdir(exist_ok=True)
+    return session_dir / DEFAULT_SESSION_FILE
+
+
+def is_session_expired(session_path: Path) -> bool:
+    """Check if session file is older than SESSION_TTL_DAYS.
+
+    Args:
+        session_path: Path to the session file.
+
+    Returns:
+        True if session is expired or doesn't exist, False otherwise.
+    """
+    if not session_path.exists():
+        return False
+
+    session_age = datetime.now(UTC) - datetime.fromtimestamp(
+        session_path.stat().st_mtime, UTC
+    )
+    return session_age > timedelta(days=SESSION_TTL_DAYS)
+
+
+def cleanup_expired_session(session_path: Path) -> None:
+    """Delete expired session file and related files.
+
+    Args:
+        session_path: Path to the session file to clean up.
+    """
+    if not session_path.exists():
+        return
+
+    LOG.info("Removing expired session file (older than %d days)", SESSION_TTL_DAYS)
+
+    # Remove main session file
+    session_path.unlink(missing_ok=True)
+
+    # Remove journal file if exists
+    journal_file = session_path.with_suffix(".session-journal")
+    journal_file.unlink(missing_ok=True)
+
+
+def force_clear_session() -> None:
+    """Force clear Telegram session files.
+
+    Deletes session file and related files, printing status message.
+    Used when user explicitly requests session cleanup via --clear-session.
+    """
+    session_path = get_session_path()
+
+    if not session_path.exists():
+        print("No session found to clear.")
+        return
+
+    print(f"Clearing session: {session_path}")
+
+    # Remove main session file
+    session_path.unlink(missing_ok=True)
+
+    # Remove journal file if exists
+    journal_file = session_path.with_suffix(".session-journal")
+    journal_file.unlink(missing_ok=True)
+
+    print("Session cleared successfully.")
 
 
 LOG = logging.getLogger(__name__)
@@ -262,8 +337,15 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "--version", action="version", version=f"tgfolder_export {__version__}"
     )
 
-    # Output format options (required)
-    output_group = parser.add_mutually_exclusive_group(required=True)
+    # Session management
+    parser.add_argument(
+        "--clear-session",
+        action="store_true",
+        help="Clear saved Telegram session and exit",
+    )
+
+    # Output format options (required unless --clear-session is used)
+    output_group = parser.add_mutually_exclusive_group(required=False)
     output_group.add_argument(
         "-j",
         "--json",
@@ -325,12 +407,25 @@ def main() -> None:
     parser = create_argument_parser()
     args = parser.parse_args()
 
+    # Handle session clearing
+    if args.clear_session:
+        force_clear_session()
+        return
+
+    # Validate that output format is specified
+    if not args.json and not args.text:
+        parser.error("One of -j/--json or -t/--text is required")
+
     setup_logging()
     config = get_config()
-    session_path = os.getenv("TG_SESSION_PATH", DEFAULT_SESSION_PATH)
+
+    session_path = get_session_path()
+
+    if is_session_expired(session_path):
+        cleanup_expired_session(session_path)
 
     client = TelegramClient(
-        session_path,
+        str(session_path),
         config["tg"]["app_id"],
         config["tg"]["app_hash"],
     )
