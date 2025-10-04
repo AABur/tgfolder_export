@@ -27,24 +27,29 @@ Export lists of channels and groups from your Telegram folders without downloadi
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) package manager
 - Telegram API credentials ([get them here](https://my.telegram.org/apps))
 
-### Installation
+### Quick Start (Recommended)
 
-#### Option 1: Traditional Setup
+The script includes inline metadata for uv, allowing direct execution without manual setup:
+
+```bash
+git clone https://github.com/AABur/tgfolder_export.git
+cd tgfolder_export
+uv run export.py -j  # uv auto-installs Python 3.11+ and dependencies
+```
+
+<details>
+<summary>Alternative: Traditional venv setup</summary>
+
+For developers who prefer traditional virtual environments:
+
 ```bash
 git clone https://github.com/AABur/tgfolder_export.git
 cd tgfolder_export
 make init
 source .venv/bin/activate
+./export.py -j
 ```
-
-#### Option 2: Direct Script Execution (Recommended)
-The script includes inline metadata for uv, allowing direct execution without setup:
-```bash
-git clone https://github.com/AABur/tgfolder_export.git
-cd tgfolder_export
-# uv will automatically install Python 3.11+ and dependencies
-uv run export.py -j
-```
+</details>
 
 ### Configuration
 
@@ -62,17 +67,12 @@ app_api_hash=your_api_hash_here
 **Note**: One of `-j` or `-t` options is required.
 
 ```bash
-# Using uv (recommended - handles dependencies automatically)
 uv run export.py -j                    # JSON format (default: tgf-list.json)
 uv run export.py -j my_folders.json    # JSON with custom filename
-uv run export.py -t                    # Text format (default: tgf-list.txt) 
+uv run export.py -t                    # Text format (default: tgf-list.txt)
 uv run export.py -t my_folders.txt     # Text with custom filename
 uv run export.py --help               # Show help
-
-# Traditional execution (requires activated virtual environment)
-./export.py -j
-./export.py -t my_folders.txt
-./export.py --help
+uv run export.py --clear-session      # Clear saved session
 ```
 
 ### Session Management
