@@ -491,6 +491,150 @@ def test_main_text_output(mocker: MockerFixture) -> None:
     assert "Folder: Personal" in written_content
 
 
+
+def test_is_session_expired_fresh(mocker: MockerFixture, tmp_path: Any) -> None:
+    """Test that fresh session is not expired."""
+    from datetime import UTC, datetime, timedelta
+    from pathlib import Path
+
+    from export import is_session_expired
+
+    # Create a fresh session file
+    session_file = tmp_path / "test.session"
+    session_file.touch()
+
+    # Mock to return current time (fresh file)
+    current_time = datetime.now(UTC)
+    mocker.patch(
+        "export.datetime",
+        now=mocker.Mock(return_value=current_time),
+        fromtimestamp=mocker.Mock(return_value=current_time),
+    )
+
+    assert is_session_expired(session_file) is False
+
+
+def test_is_session_expired_old(mocker: MockerFixture, tmp_path: Any) -> None:
+    """Test that old session is expired."""
+    from datetime import UTC, datetime, timedelta
+    from pathlib import Path
+
+    from export import SESSION_TTL_DAYS, is_session_expired
+
+    # Create an old session file
+    session_file = tmp_path / "test.session"
+    session_file.touch()
+
+    # Mock time to make file appear old
+    old_time = datetime.now(UTC) - timedelta(days=SESSION_TTL_DAYS + 1)
+    current_time = datetime.now(UTC)
+
+    def mock_fromtimestamp(ts: float, tz: Any) -> datetime:
+        return old_time
+
+    mocker.patch("export.datetime")
+    mocker.patch("export.datetime.now", return_value=current_time)
+    mocker.patch("export.datetime.fromtimestamp", side_effect=mock_fromtimestamp)
+
+    assert is_session_expired(session_file) is True
+
+
+def test_is_session_expired_nonexistent(tmp_path: Any) -> None:
+    """Test that nonexistent session returns False."""
+    from pathlib import Path
+
+    from export import is_session_expired
+
+    session_file = tmp_path / "nonexistent.session"
+    assert is_session_expired(session_file) is False
+
+
+def test_cleanup_expired_session(tmp_path: Any) -> None:
+    """Test cleanup removes session and journal files."""
+    from export import cleanup_expired_session
+
+    # Create session files
+    session_file = tmp_path / "test.session"
+    journal_file = tmp_path / "test.session-journal"
+    session_file.touch()
+    journal_file.touch()
+
+    cleanup_expired_session(session_file)
+
+    assert not session_file.exists()
+    assert not journal_file.exists()
+
+
+def test_cleanup_expired_session_nonexistent(tmp_path: Any) -> None:
+    """Test cleanup handles nonexistent session gracefully."""
+    from export import cleanup_expired_session
+
+    session_file = tmp_path / "nonexistent.session"
+    cleanup_expired_session(session_file)  # Should not raise
+
+
+def test_force_clear_session_exists(mocker: MockerFixture, tmp_path: Any) -> None:
+    """Test force clear removes session files and prints messages."""
+    from export import force_clear_session
+
+    # Create session files
+    session_file = tmp_path / "tg.session"
+    journal_file = tmp_path / "tg.session-journal"
+    session_file.touch()
+    journal_file.touch()
+
+    # Mock get_session_path to return our temp path
+    mocker.patch("export.get_session_path", return_value=session_file)
+
+    # Capture print output
+    mock_print = mocker.patch("builtins.print")
+
+    force_clear_session()
+
+    assert not session_file.exists()
+    assert not journal_file.exists()
+    assert mock_print.call_count == 2
+    mock_print.assert_any_call(f"Clearing session: {session_file}")
+    mock_print.assert_any_call("Session cleared successfully.")
+
+
+def test_force_clear_session_not_exists(mocker: MockerFixture, tmp_path: Any) -> None:
+    """Test force clear handles nonexistent session."""
+    from export import force_clear_session
+
+    session_file = tmp_path / "tg.session"
+
+    # Mock get_session_path to return our temp path
+    mocker.patch("export.get_session_path", return_value=session_file)
+
+    # Capture print output
+    mock_print = mocker.patch("builtins.print")
+
+    force_clear_session()
+
+    mock_print.assert_called_once_with("No session found to clear.")
+
+
+def test_main_clear_session(mocker: MockerFixture) -> None:
+    """Test main with --clear-session flag."""
+    mocker.patch("sys.argv", ["export.py", "--clear-session"])
+    mock_force_clear = mocker.patch("export.force_clear_session")
+
+    main()
+
+    mock_force_clear.assert_called_once()
+
+
+def test_main_missing_output_format(mocker: MockerFixture) -> None:
+    """Test main without -j/-t raises error."""
+    mocker.patch("sys.argv", ["export.py"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 2  # argparse error code
+
+
 def test_render_text_result_empty_folders(mocker: MockerFixture) -> None:
     """Test text rendering with empty folder list."""
     result = render_text_result([])
